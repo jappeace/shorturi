@@ -18,11 +18,12 @@ import           Servant
 import Control.Monad.Reader
 import Network.Wai.Handler.Warp
 import           Servant.Server.Generic
-import Control.Exception(throwIO)
 import Shortened
 import Sanitization
 import Uri
 import Data.Coerce
+import Control.Monad.Error.Class
+import Control.Monad.Except
 
 makeSettings :: IO ApiSettings
 makeSettings = pure $ MkApiSettings
@@ -52,7 +53,7 @@ appProxy :: Proxy (ToServant App AsApi)
 appProxy = Proxy
 
 webServiceToHandler :: ApiSettings -> Endpoint a -> Handler a
-webServiceToHandler b m = liftIO $ runReaderT (unEndpoint m) b
+webServiceToHandler b m = Handler $ runReaderT (unEndpoint m) b
 
 writerApp :: ApiSettings -> Application
 writerApp settings = serve appProxy $
@@ -64,8 +65,8 @@ data ApiSettings = MkApiSettings
   , retrieveUri :: Shortened 'Checked -> IO (Uri 'Checked)
   }
 
-newtype Endpoint a = MkEndpoint {unEndpoint :: ReaderT ApiSettings IO a }
-  deriving newtype (Functor, Monad, Applicative, MonadIO, MonadReader ApiSettings)
+newtype Endpoint a = MkEndpoint {unEndpoint :: ReaderT ApiSettings (ExceptT ServerError IO) a }
+  deriving newtype (Functor, Monad, Applicative, MonadIO, MonadReader ApiSettings, MonadError ServerError)
 
 appServer :: ToServant App (AsServerT Endpoint)
 appServer = genericServerT App
@@ -79,7 +80,7 @@ shorten urix = do
   generator <- asks genShortened
   shortened <- liftIO $ generator
   inserter <- asks insertUri
-  liftIO $ maybe (throwIO $ err422) (inserter shortened) $ validateUri urix
+  maybe (throwError $ err422) (liftIO . inserter shortened) $ validateUri urix
   pure shortened
 
 follow :: Shortened 'Checked -> Endpoint (Uri 'Checked)
