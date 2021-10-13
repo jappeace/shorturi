@@ -26,6 +26,10 @@ source-repository head
 library
   exposed-modules:
       Lib
+      Model
+      Sanitization
+      Shortened
+      Uri
   other-modules:
       Paths_shorturi
   hs-source-dirs:
@@ -131,13 +135,16 @@ test-suite unit
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields
   build-depends:
-      aeson
+      QuickCheck
+    , aeson
     , base >=4.7 && <5
     , hspec
     , hspec-core
     , mtl
     , network-uri
+    , quickcheck-instances
     , servant
+    , servant-quickcheck
     , servant-server
     , shorturi
     , text
