@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds      #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -7,17 +7,17 @@ module Test.TestSpec
   )
 where
 
+import           Control.Exception
+import qualified Data.Text                      as T
 import           Lib
-import           Test.Hspec
-import Servant.QuickCheck
+import           Sanitization
 import           Servant
-import Test.QuickCheck
-import Uri
-import Sanitization
-import Test.QuickCheck.Instances.Text()
-import Control.Exception
-import Shortened
-import qualified Data.Text as T
+import           Servant.QuickCheck
+import           Shortened
+import           Test.Hspec
+import           Test.QuickCheck
+import           Test.QuickCheck.Instances.Text ()
+import           Uri
 
 one :: Int
 one = 1
@@ -45,8 +45,8 @@ spec = do
       one `shouldBe` 1
   describe "Servant quickheck, this will grow with the api over time" $ do
     it "no 500" $
-      withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings) $ \burl ->
+      withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings "testdb") $ \burl ->
         serverSatisfies appProxy burl defaultArgs (not500 <%> mempty) -- I don't like this property combining mechanism, I think it's better to write a test per property
     it "only json" $
-      withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings) $ \burl ->
+      withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings "testdb") $ \burl ->
         serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> mempty)

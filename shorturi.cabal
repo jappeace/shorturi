@@ -58,8 +58,12 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64
+    , monad-logger
     , mtl
     , network-uri
+    , persistent
+    , persistent-sqlite
     , servant
     , servant-server
     , text
@@ -96,8 +100,12 @@ executable exe
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64
+    , monad-logger
     , mtl
     , network-uri
+    , persistent
+    , persistent-sqlite
     , servant
     , servant-server
     , shorturi
@@ -138,10 +146,14 @@ test-suite unit
       QuickCheck
     , aeson
     , base >=4.7 && <5
+    , base64
     , hspec
     , hspec-core
+    , monad-logger
     , mtl
     , network-uri
+    , persistent
+    , persistent-sqlite
     , quickcheck-instances
     , servant
     , servant-quickcheck

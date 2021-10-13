@@ -58,6 +58,10 @@ dependencies:
 - mtl
 - warp
 - text
+- persistent-sqlite
+- persistent
+- monad-logger
+- base64 # oh a friend of mine maintains this.
 
 library:
   source-dirs: src
