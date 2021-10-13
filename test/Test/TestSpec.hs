@@ -39,12 +39,14 @@ instance ToHttpApiData (Shortened 'Checked) where
   toUrlPiece = toText
 
 spec :: Spec
-spec =
+spec = do
   describe "The sanity of our test setup" $ do
     it "should satisfy equality" $
       one `shouldBe` 1
-    it "follows best practices" $
+  describe "Servant quickheck " $ do
+    it "no 500" $
       withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings) $ \burl ->
-        serverSatisfies appProxy burl defaultArgs (not500
-                                    <%> onlyJsonObjects
-                                    <%> mempty)
+        serverSatisfies appProxy burl defaultArgs (not500 <%> mempty)
+    it "only json" $
+      withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings) $ \burl ->
+        serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> mempty)
