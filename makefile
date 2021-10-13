@@ -55,3 +55,10 @@ bundle:
 	rm -f result
 	nix-build nix/bundle.nix
 	mv result template
+
+
+post:
+		curl -v -H "Content-Type: application/json" --data '{"url": "https://jappie.me"}' http://localhost:7777/
+
+get:
+		curl -v http://localhost:7777/12345

@@ -8,7 +8,17 @@ this serves two routes
 
 ## Usage
 
+```
+nix-shell
+make run
+```
 
+in a different terminal
+
+```
+make get
+make post
+```
 ### Tools
 Enter the nix shell.
 ```

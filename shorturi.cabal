@@ -3,13 +3,11 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: c3e782ae811ffdac6f64773c93afd79fd2ee5a25b75453a1ad1d09c85eb36863
 
-name:           template
+name:           shorturi
 version:        1.0.0
-homepage:       https://github.com/jappeace/haskell-template-project#readme
-bug-reports:    https://github.com/jappeace/haskell-template-project/issues
+homepage:       https://github.com/jappeace/shorturi#readme
+bug-reports:    https://github.com/jappeace/shorturi/issues
 author:         Jappie Klooster
 maintainer:     jappieklooster@hotmail.com
 copyright:      2020 Jappie Klooster
@@ -23,13 +21,13 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/jappeace/haskell-template-project
+  location: https://github.com/jappeace/shorturi
 
 library
   exposed-modules:
       Lib
   other-modules:
-      Paths_template
+      Paths_shorturi
   hs-source-dirs:
       src
   default-extensions:
@@ -54,13 +52,20 @@ library
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , mtl
+    , network-uri
+    , servant
+    , servant-server
+    , text
+    , warp
   default-language: Haskell2010
 
 executable exe
   main-is: exe.hs
   other-modules:
-      Paths_template
+      Paths_shorturi
   hs-source-dirs:
       app
   default-extensions:
@@ -85,8 +90,15 @@ executable exe
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
-    , template
+      aeson
+    , base >=4.7 && <5
+    , mtl
+    , network-uri
+    , servant
+    , servant-server
+    , shorturi
+    , text
+    , warp
   default-language: Haskell2010
 
 test-suite unit
@@ -94,7 +106,7 @@ test-suite unit
   main-is: Spec.hs
   other-modules:
       Test.TestSpec
-      Paths_template
+      Paths_shorturi
   hs-source-dirs:
       test
   default-extensions:
@@ -119,8 +131,15 @@ test-suite unit
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , hspec
     , hspec-core
-    , template
+    , mtl
+    , network-uri
+    , servant
+    , servant-server
+    , shorturi
+    , text
+    , warp
   default-language: Haskell2010

@@ -8,6 +8,7 @@ pkgs.haskellPackages.shellFor {
   buildInputs = [
         pkgs.ghcid
         pkgs.cabal-install
+        pkgs.curl
         ];
   exactDeps = true;
   NIX_PATH="nixpkgs=${pkgs.path}:.";

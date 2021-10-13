@@ -51,6 +51,13 @@ default-extensions:
 
 dependencies:
 - base >= 4.7 && < 5
+- servant-server
+- servant
+- network-uri
+- aeson
+- mtl
+- warp
+- text
 
 library:
   source-dirs: src
