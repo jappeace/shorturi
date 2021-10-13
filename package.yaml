@@ -62,6 +62,7 @@ dependencies:
 - persistent
 - monad-logger
 - base64 # oh a friend of mine maintains this.
+- random
 
 library:
   source-dirs: src
