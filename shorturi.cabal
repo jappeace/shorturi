@@ -56,7 +56,8 @@ library
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields
   build-depends:
-      aeson
+      MonadRandom
+    , aeson
     , base >=4.7 && <5
     , base64
     , monad-logger
@@ -99,7 +100,8 @@ executable exe
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      MonadRandom
+    , aeson
     , base >=4.7 && <5
     , base64
     , monad-logger
@@ -145,7 +147,8 @@ test-suite unit
       TypeApplications
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities -Wcpp-undef -fwarn-tabs -Wpartial-fields
   build-depends:
-      QuickCheck
+      MonadRandom
+    , QuickCheck
     , aeson
     , base >=4.7 && <5
     , base64

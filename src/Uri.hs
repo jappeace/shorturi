@@ -7,6 +7,7 @@ module Uri
   ( Uri
   , validateUri
   , makeUri
+  , unmakeUri
   ) where
 
 import           Data.Aeson
@@ -26,6 +27,9 @@ validateUri (MkUri x) = MkUri x <$ parseURI (T.unpack x)
 
 makeUri :: Text -> Uri 'Incoming
 makeUri = MkUri
+
+unmakeUri :: Uri a -> Text
+unmakeUri (MkUri x) = x
 
 instance PersistField (Uri 'Checked) where
   toPersistValue (MkUri x) = toPersistValue x

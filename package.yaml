@@ -63,6 +63,7 @@ dependencies:
 - monad-logger
 - base64 # oh a friend of mine maintains this.
 - random
+- MonadRandom
 
 library:
   source-dirs: src

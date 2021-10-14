@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds      #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData     #-}
+{-# LANGUAGE PackageImports #-}
 
 -- | hides Uri constructor so that validation always happens
 module Shortened
@@ -15,35 +16,37 @@ module Shortened
   )
 where
 
+import           Control.Monad.Random.Class
 import           Control.Monad.Reader
 import           Data.Aeson
 import           Data.Bifunctor
-import           Data.Text                 (Text)
-import qualified Data.Text                 as T
-import           Data.Text.Encoding.Base64
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
+import "base64" Data.ByteString.Base64 (encodeBase64)
+import "base64" Data.Text.Encoding.Base64 (decodeBase64)
+import qualified Data.ByteString as BS
 import           Database.Persist.Sql
 import           Sanitization
 import           Servant
-import           System.Random
-
 
 newtype Shortened (a :: Sanitization) = MkShortened Text
   deriving newtype (ToJSON, Show)
 
 shortLength :: Int
-shortLength = 5
+shortLength = 8
 
 data InputIssues = WrongLength Int
                  | Base64Issue Text
 
-genShortened :: IO (Shortened 'Checked)
+
+genShortened :: MonadRandom m => m (Shortened 'Checked)
 genShortened = do
-  str <- replicateM 5 $ (randomIO :: IO Char)
-  pure $ MkShortened $ encodeBase64 $ T.pack str
+  str <- replicateM 5 $ getRandom
+  pure $ MkShortened $ encodeBase64 $ BS.pack str
 
 
 showIssue :: InputIssues -> Text
-showIssue (WrongLength x) = "Expected length of 5, got: " <> T.pack (show x)
+showIssue (WrongLength x) = "Expected length of 8, got: " <> T.pack (show x)
 showIssue (Base64Issue x) = "Is not a base64 encoding: " <> T.pack (show x)
 
 validShortened :: Text -> Either InputIssues (Shortened 'Checked)
@@ -61,7 +64,6 @@ instance FromHttpApiData (Shortened 'Checked) where
 
 makeShortened :: Text -> Shortened 'Incoming
 makeShortened = MkShortened
-
 
 toText :: Shortened a -> Text
 toText (MkShortened x) = x
