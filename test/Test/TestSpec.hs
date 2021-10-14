@@ -11,6 +11,7 @@ import           Control.Exception
 import           Control.Monad.Random.Class
 import           Data.Either
 import           Data.Maybe
+import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 import           Lib
 import           Sanitization
@@ -24,7 +25,8 @@ import           Test.QuickCheck.Gen
 import           Test.QuickCheck.Instances.Text ()
 import           Test.QuickCheck.Random
 import           Uri
-import Data.Text(Text)
+import qualified Data.ByteString.Lazy as LBS
+import Data.Aeson
 
 deriving instance Exception InputIssues
 instance Show InputIssues where
@@ -71,19 +73,57 @@ randomUriRejects = isNothing . validateUri . makeUri
 randomShortenedRejects :: Text -> Bool
 randomShortenedRejects = isLeft . validShortened
 
+runEndpoint :: ApiSettings -> Endpoint a -> IO (Either ServerError a)
+runEndpoint ctx end = runHandler $ webServiceToHandler ctx end
+
+
+uriRoundTrip :: Uri 'Checked -> Bool
+uriRoundTrip uri = decode x == Just uri
+  where
+    x :: LBS.ByteString
+    x = encode uri
+
+
 spec :: Spec
 spec = do
-  describe "Uri parser" $ do
-      it "accepts a checked uri's" $ property checkedUriIsValid
-      it "rejects random strings" $ property randomUriRejects
-  describe "Shortened parser " $ do
-      it "accepts a checked shortened" $ property checkedShortenedIsValid
-      it "rejects random strings" $ property randomShortenedRejects
-  describe "Shortened" $ do
-    it "is the right legnth " $ property isRightLength
-  describe "Servant quickheck, this will grow with the api over time" $ do
+  describe "parser" $ do
+    describe "Uri " $ do
+        it "accepts a checked uri's" $ property checkedUriIsValid
+        it "rejects random strings" $ property randomUriRejects
+        it "can parse my website" $
+          isJust (validateUri $ makeUri "https://jappie.me") `shouldBe` True
+    describe "Shortened parser " $ do
+        it "accepts a checked shortened" $ property checkedShortenedIsValid
+        it "rejects random strings" $ property randomShortenedRejects
+  describe "Shortened generator" $ do
+    it "is the right length " $ property isRightLength
+
+  describe "Aeson" $ do
+    describe "URI" $ do
+      it "encodes as object goldenly" $
+        encode (makeUri "https://jappie.me") -- only reason I use this is cuz I have an autotype for this uri
+          `shouldBe` "{\"uri\":\"https://jappie.me\"}"
+      it "roundtrips" $ property uriRoundTrip
+    describe "Shortened" $ do
+      it "encodes as object goldenly" $
+        encode (makeShortened "O/h4Gmc=") -- only reason I use this is cuz I have an autotype for this uri
+          `shouldBe` "{\"short\":\"O/h4Gmc=\"}"
+  describe "Integration " $ do
+    it "can retrieve an inserted uri" $ do
+      let uri = fromMaybe (error "could not parse uri") (validateUri incomingUri)
+          incomingUri = makeUri "https://jappie.me"
+      settings <- makeSettings ":memory:"
+      resUri <- runEndpoint settings $ do
+          short <- shortenEndpoint incomingUri
+          followEndpoint short
+      resUri `shouldBe` Right uri
+
+  describe "Integration Servant quickheck (smoke test check everything)" $ do
     it "no 500, only json" $
-      withServantServer appProxy ((\settings -> hoistServer appProxy (webServiceToHandler settings) appServer) <$> makeSettings ":memory:") $ \burl ->
+      withServantServer appProxy (bracket (makeSettings ":memory:") destroySettings
+                                  (\settings ->
+                                     pure $ hoistServer appProxy (webServiceToHandler settings) appServer
+                                  ) ) $ \burl ->
         serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> not500 <%> mempty) -- I don't like this property combining mechanism, I think it's better to write a test per property
 
 

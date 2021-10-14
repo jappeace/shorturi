@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds      #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE StrictData     #-}
 {-# LANGUAGE PackageImports #-}
+{-# LANGUAGE StrictData     #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | hides Uri constructor so that validation always happens
 module Shortened
@@ -20,17 +22,20 @@ import           Control.Monad.Random.Class
 import           Control.Monad.Reader
 import           Data.Aeson
 import           Data.Bifunctor
-import           Data.Text                  (Text)
-import qualified Data.Text                  as T
-import "base64" Data.ByteString.Base64 (encodeBase64)
-import "base64" Data.Text.Encoding.Base64 (decodeBase64)
-import qualified Data.ByteString as BS
+import qualified Data.ByteString                    as BS
+import           "base64" Data.ByteString.Base64    (encodeBase64)
+import           Data.Text                          (Text)
+import qualified Data.Text                          as T
+import           "base64" Data.Text.Encoding.Base64 (decodeBase64)
 import           Database.Persist.Sql
+import           GHC.Generics
 import           Sanitization
 import           Servant
 
-newtype Shortened (a :: Sanitization) = MkShortened Text
-  deriving newtype (ToJSON, Show)
+newtype Shortened (a :: Sanitization) = MkShortened { short :: Text }
+  deriving newtype (Show, Eq)
+  deriving stock (Generic)
+  deriving anyclass (ToJSON)
 
 shortLength :: Int
 shortLength = 8

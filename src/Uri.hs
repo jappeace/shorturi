@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds      #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData     #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 -- | hides Uri constructor so that validation always happens
 module Uri
@@ -17,10 +18,12 @@ import qualified Data.Text            as T
 import           Database.Persist.Sql
 import           Network.URI
 import           Sanitization
+import           GHC.Generics
 
--- TODO write regression test should be {uri: "xxx"}
-newtype Uri (a :: Sanitization) = MkUri Text
-  deriving (ToJSON, FromJSON, Show)
+newtype Uri (a :: Sanitization) = MkUri {uri :: Text}
+  deriving newtype (Show, Eq)
+  deriving stock (Generic)
+  deriving anyclass (ToJSON, FromJSON)
 
 validateUri :: Uri 'Incoming -> Maybe (Uri 'Checked)
 validateUri (MkUri x) = MkUri x <$ parseURI (T.unpack x)

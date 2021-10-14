@@ -29,5 +29,5 @@ Mapping
     UniqueShortened shortened -- shortened needs to be unique so that we don't accidently create two the same
     UniqueOriginal original -- the original optinally is uqniue, to not polute the shortened namespace.
 
-    deriving Show
+    deriving Show Eq
 |]

@@ -9,6 +9,13 @@ module Lib
   , appProxy
   , webServiceToHandler
   , makeSettings
+  , insertUriSql
+  , retrieveUriSql
+  , ApiSettings
+  , Endpoint
+  , shortenEndpoint
+  , followEndpoint
+  , destroySettings
   )
 where
 
@@ -16,6 +23,8 @@ import           Control.Monad.Error.Class
 import           Control.Monad.Except
 import           Control.Monad.Logger
 import           Control.Monad.Reader
+import           Data.Pool
+import           Data.Text                 (Text)
 import           Database.Persist.Sqlite
 import           Model
 import           Network.Wai.Handler.Warp
@@ -23,21 +32,18 @@ import           Sanitization
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic
+import           Shortened                 (Shortened)
 import qualified Shortened
-import           Shortened(Shortened)
 import           Uri
-import           Data.Text(Text)
 
 makeSettings :: Text -> IO ApiSettings
 makeSettings dbname = do
   pool <- runNoLoggingT $ createSqlitePool dbname 5
   runSqlPool (runMigration migrateAll) pool
+  pure $ MkApiSettings { apiPool = pool}
 
-  pure $ MkApiSettings
-        { insertUri = \a b -> runSqlPool (insertUriSql a b) pool
-        , retrieveUri = \x -> runSqlPool (retrieveUriSql x) pool
-        , genShortened = Shortened.genShortened
-        }
+destroySettings :: ApiSettings -> IO ()
+destroySettings (MkApiSettings pool) = destroyAllResources pool
 
 insertUriSql :: MonadIO m => Shortened 'Checked -> Uri 'Checked -> ReaderT SqlBackend m ()
 insertUriSql a b = void $ insert $ Mapping a b
@@ -71,36 +77,42 @@ writerApp :: ApiSettings -> Application
 writerApp settings = serve appProxy $
   hoistServer appProxy (webServiceToHandler settings) appServer
 
--- crummy readerT
+-- here there used to be areaderT to stub out db functions.
+-- the app is to trivial to test anything meaningfull with that however.
+-- at supercede I used that trick to get rid of s3 connection problems
+-- but generally it doesn't make as much sense for a db, becase db
+-- contains a lot of logic anyway
 data ApiSettings = MkApiSettings
-  { insertUri    :: Shortened 'Checked -> Uri 'Checked -> IO ()
-  , genShortened :: IO (Shortened 'Checked)
-  , retrieveUri  :: Shortened 'Checked -> IO (Maybe (Entity Mapping))
+  { apiPool :: Pool SqlBackend
   }
+
 
 newtype Endpoint a = MkEndpoint {unEndpoint :: ReaderT ApiSettings (ExceptT ServerError IO) a }
   deriving newtype (Functor, Monad, Applicative, MonadIO, MonadReader ApiSettings, MonadError ServerError)
 
 appServer :: ToServant App (AsServerT Endpoint)
 appServer = genericServerT App
-  { appShorten = shorten
-  , appFollow  = follow
+  { appShorten = shortenEndpoint
+  , appFollow  = followEndpoint
   }
 
-shorten :: Uri 'Incoming -> Endpoint (Shortened 'Checked)
-shorten urix = do
+runDB :: ReaderT SqlBackend IO a -> Endpoint a
+runDB monad = do
+  pool <- asks apiPool
+  liftIO $ runSqlPool monad pool
+
+shortenEndpoint :: Uri 'Incoming -> Endpoint (Shortened 'Checked)
+shortenEndpoint urix = do
   liftIO $ putStrLn "entering shortener"
-  generator <- asks genShortened
-  shortened <- liftIO $ generator
-  inserter <- asks insertUri
-  maybe (throwError $ err422) (liftIO . inserter shortened) $ validateUri urix
+  shortened <- liftIO $ Shortened.genShortened
+  maybe (throwError $ err422) (runDB . insertUriSql shortened) $ validateUri urix
   pure shortened
 
-follow :: Shortened 'Checked -> Endpoint (Uri 'Checked)
-follow incoming = do
+followEndpoint :: Shortened 'Checked -> Endpoint (Uri 'Checked)
+followEndpoint incoming = do
   liftIO $ putStrLn "entering follow"
-  retiever <- asks retrieveUri
-  retrieved <- liftIO $ retiever incoming
+  retrieved <- runDB $ retrieveUriSql incoming
   case retrieved of
-    Just x -> pure $ mappingOriginal $ entityVal x
+    Just x  -> pure $ mappingOriginal $ entityVal x
     Nothing -> throwError $ err404
+
