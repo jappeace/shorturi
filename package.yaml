@@ -92,3 +92,4 @@ tests:
     - shorturi
     - QuickCheck
     - quickcheck-instances
+    - servant-quickcheck
