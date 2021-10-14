@@ -58,8 +58,8 @@ bundle:
 
 
 post:
-		curl -v -H "Content-Type: application/json" --data '{"uri": "https://jappie.me"}' http://localhost:7777/
+		curl -v -H "Content-Type: application/json" --data '{"uri": "https://jappie.me/jap"}' http://localhost:7777/
 
 
 get:
-		curl -v http://localhost:7777/12345
+		curl -v http://localhost:7777/7V-Mms4=

@@ -23,10 +23,10 @@ import           Control.Monad.Reader
 import           Data.Aeson
 import           Data.Bifunctor
 import qualified Data.ByteString                    as BS
-import           "base64" Data.ByteString.Base64    (encodeBase64)
+import           "base64" Data.ByteString.Base64.URL    (encodeBase64)
 import           Data.Text                          (Text)
 import qualified Data.Text                          as T
-import           "base64" Data.Text.Encoding.Base64 (decodeBase64)
+import           "base64" Data.Text.Encoding.Base64.URL (decodeBase64)
 import           Database.Persist.Sql
 import           GHC.Generics
 import           Sanitization

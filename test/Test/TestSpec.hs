@@ -26,6 +26,7 @@ import           Test.QuickCheck.Random
 import           Uri
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
+import Network.URI
 
 deriving instance Exception InputIssues
 instance Show InputIssues where
@@ -74,6 +75,10 @@ uriRoundTrip uri = decode x == Just uri
     x :: LBS.ByteString
     x = encode uri
 
+assertBase64IsRoot :: Shortened 'Checked -> Bool
+assertBase64IsRoot input =
+  (length . pathSegments <$> parseURI (T.unpack $ "https://jappie.me/" <> toText input)
+  ) == Just 1
 
 spec :: Spec
 spec = do
@@ -86,6 +91,9 @@ spec = do
         it "accepts a checked shortened" $ property checkedShortenedIsValid
   describe "Shortened generator" $ do
     it "is the right length " $ property isRightLength
+  describe "Regression" $ do
+    it "uses base 64 URL module otherwise wrong signs like /" $
+      property assertBase64IsRoot
 
   describe "Aeson" $ do
     describe "URI" $ do
@@ -116,13 +124,13 @@ spec = do
             pure (short, short2)
         uncurry (==) <$> res `shouldBe` Right True
 
-  describe "Integration Servant quickheck (smoke test check everything)" $ do
-    it "no 500, only json" $
-      withServantServer appProxy (bracket (makeSettings "test-db") destroySettings
-                                  (\settings ->
-                                     pure $ hoistServer appProxy (webServiceToHandler settings) appServer
-                                  ) ) $ \burl ->
-        serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> not500 <%> mempty) -- I don't like this property combining mechanism, I think it's better to write a test per property
+    describe "Servant quickheck (smoke test check everything)" $ do
+      it "no 500, only json" $
+        withServantServer appProxy (bracket (makeSettings "test-db") destroySettings
+                                    (\settings ->
+                                      pure $ hoistServer appProxy (webServiceToHandler settings) appServer
+                                    ) ) $ \burl ->
+          serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> not500 <%> mempty) -- I don't like this property combining mechanism, I think it's better to write a test per property
 
 
 mkGen :: (QCGen -> a) -> Gen a
