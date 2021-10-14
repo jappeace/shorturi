@@ -109,7 +109,6 @@ runDB monad = do
 
 shortenEndpoint :: Uri 'Incoming -> Endpoint (Shortened 'Checked)
 shortenEndpoint urix = do
-  liftIO $ putStrLn "entering shortener"
   shortened <- liftIO $ Shortened.genShortened
   case validateUri urix of
     Nothing -> throwError $ err422
@@ -130,7 +129,6 @@ shortenEndpoint urix = do
 
 followEndpoint :: Shortened 'Checked -> Endpoint (Uri 'Checked)
 followEndpoint incoming = do
-  liftIO $ putStrLn "entering follow"
   retrieved <- runDB $ retrieveUriSql incoming
   case retrieved of
     Just x  -> pure $ mappingOriginal $ entityVal x

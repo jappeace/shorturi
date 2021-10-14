@@ -11,7 +11,6 @@ import           Control.Exception
 import           Control.Monad.Random.Class
 import           Data.Either
 import           Data.Maybe
-import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 import           Lib
 import           Sanitization
@@ -66,16 +65,8 @@ checkedUriIsValid = isJust . validateUri . checkedToIncoming
 checkedShortenedIsValid :: Shortened 'Checked -> Bool
 checkedShortenedIsValid = isRight . validShortened . toText
 
--- technically it's possible for 1 to pass, but incredibly unlikely for more
-randomUriRejects :: Text -> Bool
-randomUriRejects = isNothing . validateUri . makeUri
-
-randomShortenedRejects :: Text -> Bool
-randomShortenedRejects = isLeft . validShortened
-
 runEndpoint :: ApiSettings -> Endpoint a -> IO (Either ServerError a)
 runEndpoint ctx end = runHandler $ webServiceToHandler ctx end
-
 
 uriRoundTrip :: Uri 'Checked -> Bool
 uriRoundTrip uri = decode x == Just uri
@@ -89,12 +80,10 @@ spec = do
   describe "parser" $ do
     describe "Uri " $ do
         it "accepts a checked uri's" $ property checkedUriIsValid
-        it "rejects random strings" $ property randomUriRejects
         it "can parse my website" $
           isJust (validateUri $ makeUri "https://jappie.me") `shouldBe` True
     describe "Shortened parser " $ do
         it "accepts a checked shortened" $ property checkedShortenedIsValid
-        it "rejects random strings" $ property randomShortenedRejects
   describe "Shortened generator" $ do
     it "is the right length " $ property isRightLength
 
