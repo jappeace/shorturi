@@ -11,13 +11,6 @@ this serves two routes
 I think this is a reasonable prototype,
 but as discussed they prefer having it set in stone.
 
-+ [x] Ensure correct length
-+ [x] Do some checking on validations?
-+ [ ] Add integration tests
-+ [ ] Make tests pass.
-+ [ ] Write stubout tests.
-+ [ ] write json versioning tests.
-
 ## Usage
 
 ```

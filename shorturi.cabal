@@ -60,12 +60,14 @@ library
     , aeson
     , base >=4.7 && <5
     , base64
+    , bytestring
     , monad-logger
     , mtl
     , network-uri
     , persistent
     , persistent-sqlite
     , random
+    , resource-pool
     , servant
     , servant-server
     , text
@@ -104,12 +106,14 @@ executable exe
     , aeson
     , base >=4.7 && <5
     , base64
+    , bytestring
     , monad-logger
     , mtl
     , network-uri
     , persistent
     , persistent-sqlite
     , random
+    , resource-pool
     , servant
     , servant-server
     , shorturi
@@ -152,6 +156,7 @@ test-suite unit
     , aeson
     , base >=4.7 && <5
     , base64
+    , bytestring
     , hspec
     , hspec-core
     , monad-logger
@@ -161,8 +166,8 @@ test-suite unit
     , persistent-sqlite
     , quickcheck-instances
     , random
+    , resource-pool
     , servant
-    , servant-quickcheck
     , servant-server
     , shorturi
     , text

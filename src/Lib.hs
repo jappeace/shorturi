@@ -35,6 +35,9 @@ import           Servant.Server.Generic
 import           Shortened                 (Shortened)
 import qualified Shortened
 import           Uri
+import           Database.Sqlite
+import Control.Exception(throwIO, try)
+
 
 makeSettings :: Text -> IO ApiSettings
 makeSettings dbname = do
@@ -47,6 +50,9 @@ destroySettings (MkApiSettings pool) = destroyAllResources pool
 
 insertUriSql :: MonadIO m => Shortened 'Checked -> Uri 'Checked -> ReaderT SqlBackend m ()
 insertUriSql a b = void $ insert $ Mapping a b
+
+retrieveShortenedSql :: MonadIO m => Uri 'Checked -> ReaderT SqlBackend m (Maybe (Entity Mapping))
+retrieveShortenedSql x = getBy $ UniqueOriginal x
 
 retrieveUriSql :: MonadIO m => Shortened 'Checked ->  ReaderT SqlBackend m (Maybe (Entity Mapping))
 retrieveUriSql x = getBy $ UniqueShortened x
@@ -105,8 +111,22 @@ shortenEndpoint :: Uri 'Incoming -> Endpoint (Shortened 'Checked)
 shortenEndpoint urix = do
   liftIO $ putStrLn "entering shortener"
   shortened <- liftIO $ Shortened.genShortened
-  maybe (throwError $ err422) (runDB . insertUriSql shortened) $ validateUri urix
-  pure shortened
+  case validateUri urix of
+    Nothing -> throwError $ err422
+    Just validUri -> do
+      pool <- asks apiPool
+      mError <- liftIO $ try (runSqlPool (insertUriSql shortened validUri) pool)
+      case mError of
+        Right _ -> pure shortened
+        Left (SqliteException ErrorConstraint _ _) -> do
+          res <- runDB $ retrieveShortenedSql validUri
+          case res of
+            Nothing -> do
+              liftIO $ putStrLn "warning throwing where should've found"
+              throwError err404
+            Just x -> pure $ mappingShortened $ entityVal x
+
+        Left err -> liftIO $ throwIO err
 
 followEndpoint :: Shortened 'Checked -> Endpoint (Uri 'Checked)
 followEndpoint incoming = do

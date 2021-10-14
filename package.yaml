@@ -64,6 +64,8 @@ dependencies:
 - base64 # oh a friend of mine maintains this.
 - random
 - MonadRandom
+- bytestring
+- resource-pool
 
 library:
   source-dirs: src
@@ -89,5 +91,4 @@ tests:
     - hspec-core
     - shorturi
     - QuickCheck
-    - servant-quickcheck
     - quickcheck-instances

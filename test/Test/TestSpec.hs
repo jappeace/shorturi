@@ -109,18 +109,27 @@ spec = do
         encode (makeShortened "O/h4Gmc=") -- only reason I use this is cuz I have an autotype for this uri
           `shouldBe` "{\"short\":\"O/h4Gmc=\"}"
   describe "Integration " $ do
-    it "can retrieve an inserted uri" $ do
-      let uri = fromMaybe (error "could not parse uri") (validateUri incomingUri)
-          incomingUri = makeUri "https://jappie.me"
-      settings <- makeSettings ":memory:"
-      resUri <- runEndpoint settings $ do
-          short <- shortenEndpoint incomingUri
-          followEndpoint short
-      resUri `shouldBe` Right uri
+    it "can retrieve an inserted uri" $
+      bracket (makeSettings "test-db-1") destroySettings $ \settings -> do
+        let uri = fromMaybe (error "could not parse uri") (validateUri incomingUri)
+            incomingUri = makeUri "https://jappie.me"
+        resUri <- runEndpoint settings $ do
+            short <- shortenEndpoint incomingUri
+            followEndpoint short
+        resUri `shouldBe` Right uri
+
+    it "twice insert returns the same short" $ do
+      bracket (makeSettings "test-db-2") destroySettings $ \settings -> do
+        let incomingUri = makeUri "https://jappie.me"
+        res <- runEndpoint settings $ do
+            short <- shortenEndpoint incomingUri
+            short2 <- shortenEndpoint incomingUri
+            pure (short, short2)
+        uncurry (==) <$> res `shouldBe` Right True
 
   describe "Integration Servant quickheck (smoke test check everything)" $ do
     it "no 500, only json" $
-      withServantServer appProxy (bracket (makeSettings ":memory:") destroySettings
+      withServantServer appProxy (bracket (makeSettings "test-db") destroySettings
                                   (\settings ->
                                      pure $ hoistServer appProxy (webServiceToHandler settings) appServer
                                   ) ) $ \burl ->
