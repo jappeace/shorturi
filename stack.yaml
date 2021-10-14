@@ -2,3 +2,7 @@ resolver: lts-17.2
 
 packages:
 - .
+
+
+extra-deps:
+- servant-quickcheck-0.0.10.0@sha256:1d5849d703c2487752f8fc7391cca7c998ee24f54ca0bb72d238bf99b64ac667,3755
