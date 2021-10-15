@@ -6,11 +6,6 @@ this serves two routes
 + `/shorten`: submit a url to shorten
 + `/${url}`: follow a shortened url
 
-## TODO 
-
-I think this is a reasonable prototype,
-but as discussed they prefer having it set in stone.
-
 ## Usage
 
 ```
