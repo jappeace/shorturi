@@ -22,10 +22,10 @@ import           Control.Monad.Random.Class
 import           Control.Monad.Reader
 import           Data.Aeson
 import           Data.Bifunctor
-import qualified Data.ByteString                    as BS
+import qualified Data.ByteString                        as BS
 import           "base64" Data.ByteString.Base64.URL    (encodeBase64)
-import           Data.Text                          (Text)
-import qualified Data.Text                          as T
+import           Data.Text                              (Text)
+import qualified Data.Text                              as T
 import           "base64" Data.Text.Encoding.Base64.URL (decodeBase64)
 import           Database.Persist.Sql
 import           GHC.Generics
@@ -43,12 +43,10 @@ shortLength = 8
 data InputIssues = WrongLength Int
                  | Base64Issue Text
 
-
 genShortened :: MonadRandom m => m (Shortened 'Checked)
 genShortened = do
-  str <- replicateM 5 $ getRandom
+  str <- replicateM 5 getRandom
   pure $ MkShortened $ encodeBase64 $ BS.pack str
-
 
 showIssue :: InputIssues -> Text
 showIssue (WrongLength x) = "Expected length of 8, got: " <> T.pack (show x)
@@ -58,7 +56,6 @@ validShortened :: Text -> Either InputIssues (Shortened 'Checked)
 validShortened input = do
   when (inputLength /= shortLength) $ Left $ WrongLength inputLength
   void $ first Base64Issue $ decodeBase64 input
-  -- TODO maybe check if is base64?
   pure $ MkShortened input
   where
     inputLength :: Int

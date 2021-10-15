@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds      #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StrictData     #-}
-{-# LANGUAGE DeriveAnyClass #-}
 
 -- | hides Uri constructor so that validation always happens
 module Uri
@@ -16,9 +16,9 @@ import           Data.Proxy
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Database.Persist.Sql
+import           GHC.Generics
 import           Network.URI
 import           Sanitization
-import           GHC.Generics
 
 newtype Uri (a :: Sanitization) = MkUri {uri :: Text}
   deriving newtype (Show, Eq)

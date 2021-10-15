@@ -19,6 +19,7 @@ module Lib
   )
 where
 
+import           Control.Exception         (throwIO, try)
 import           Control.Monad.Error.Class
 import           Control.Monad.Except
 import           Control.Monad.Logger
@@ -26,6 +27,7 @@ import           Control.Monad.Reader
 import           Data.Pool
 import           Data.Text                 (Text)
 import           Database.Persist.Sqlite
+import           Database.Sqlite
 import           Model
 import           Network.Wai.Handler.Warp
 import           Sanitization
@@ -35,9 +37,6 @@ import           Servant.Server.Generic
 import           Shortened                 (Shortened)
 import qualified Shortened
 import           Uri
-import           Database.Sqlite
-import Control.Exception(throwIO, try)
-
 
 makeSettings :: Text -> IO ApiSettings
 makeSettings dbname = do
@@ -62,7 +61,6 @@ main = do
   apiSettings <- makeSettings "shortner-prod"
 
   run 7777 $ writerApp apiSettings
-
 
 -- normaly I'd put these routes under v1/,
 --  so the api can change while being stable
@@ -92,7 +90,6 @@ data ApiSettings = MkApiSettings
   { apiPool :: Pool SqlBackend
   }
 
-
 newtype Endpoint a = MkEndpoint {unEndpoint :: ReaderT ApiSettings (ExceptT ServerError IO) a }
   deriving newtype (Functor, Monad, Applicative, MonadIO, MonadReader ApiSettings, MonadError ServerError)
 
@@ -121,6 +118,8 @@ shortenEndpoint urix = do
           res <- runDB $ retrieveShortenedSql validUri
           case res of
             Nothing -> do
+              -- this could happen when two the same random numbers were generated twice.
+              -- it's unlikely to happen (needs a large db)
               liftIO $ putStrLn "warning throwing where should've found"
               throwError err404
             Just x -> pure $ mappingShortened $ entityVal x

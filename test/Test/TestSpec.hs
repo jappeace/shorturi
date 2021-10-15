@@ -9,10 +9,13 @@ where
 
 import           Control.Exception
 import           Control.Monad.Random.Class
+import           Data.Aeson
+import qualified Data.ByteString.Lazy           as LBS
 import           Data.Either
 import           Data.Maybe
 import qualified Data.Text                      as T
 import           Lib
+import           Network.URI
 import           Sanitization
 import           Servant
 import           Servant.QuickCheck
@@ -24,9 +27,6 @@ import           Test.QuickCheck.Gen
 import           Test.QuickCheck.Instances.Text ()
 import           Test.QuickCheck.Random
 import           Uri
-import qualified Data.ByteString.Lazy as LBS
-import Data.Aeson
-import Network.URI
 
 deriving instance Exception InputIssues
 instance Show InputIssues where
@@ -58,8 +58,6 @@ isRightLength x = T.length (toText x) == shortLength
 checkedToIncoming :: Uri 'Checked -> Uri 'Incoming
 checkedToIncoming = makeUri . unmakeUri
 
--- this is just checking the arbitrary instance kindoff
--- but show knows what validate does, I just piggied backed of the lib anyway
 checkedUriIsValid :: Uri 'Checked -> Bool
 checkedUriIsValid = isJust . validateUri . checkedToIncoming
 
@@ -98,12 +96,12 @@ spec = do
   describe "Aeson" $ do
     describe "URI" $ do
       it "encodes as object goldenly" $
-        encode (makeUri "https://jappie.me") -- only reason I use this is cuz I have an autotype for this uri
+        encode (makeUri "https://jappie.me")
           `shouldBe` "{\"uri\":\"https://jappie.me\"}"
       it "roundtrips" $ property uriRoundTrip
     describe "Shortened" $ do
       it "encodes as object goldenly" $
-        encode (makeShortened "O/h4Gmc=") -- only reason I use this is cuz I have an autotype for this uri
+        encode (makeShortened "O/h4Gmc=")
           `shouldBe` "{\"short\":\"O/h4Gmc=\"}"
   describe "Integration " $ do
     it "can retrieve an inserted uri" $
@@ -130,7 +128,7 @@ spec = do
                                     (\settings ->
                                       pure $ hoistServer appProxy (webServiceToHandler settings) appServer
                                     ) ) $ \burl ->
-          serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> not500 <%> mempty) -- I don't like this property combining mechanism, I think it's better to write a test per property
+          serverSatisfies appProxy burl defaultArgs (onlyJsonObjects <%> not500 <%> mempty)
 
 
 mkGen :: (QCGen -> a) -> Gen a
